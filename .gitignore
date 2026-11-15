@@ -1,0 +1,22 @@
+﻿
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Large scientific data
+data/raw/*.tif
+data/raw/*.tiff
+
+# Generated outputs (keep route GeoJSON)
+outputs/*.png
+outputs/*.csv
+
+# OS files
+.DS_Store
+Thumbs.db
