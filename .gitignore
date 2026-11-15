@@ -1,21 +1,33 @@
-﻿
 # Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Virtual environments
+# Virtual environments and local environment files
 .venv/
 venv/
 .env
+.env.*
+!.env.example
 
-# Large scientific data
+# JavaScript dependencies and generated frontend bundles
+node_modules/
+**/node_modules/
+frontend/dist/
+
+# Large scientific data (keep source rasters on the server, outside Git)
 data/raw/*.tif
 data/raw/*.tiff
+backend/data/raw/*.tif
+backend/data/raw/*.tiff
 
 # Generated outputs (keep route GeoJSON)
 outputs/*.png
 outputs/*.csv
+
+# Private keys and local credentials
+*.pem
+*.key
 
 # OS files
 .DS_Store

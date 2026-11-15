@@ -1,0 +1,17 @@
+.git
+**/.git
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+**/venv/
+**/node_modules/
+.env
+.env.*
+!.env.example
+data/raw/
+backend/data/raw/
+outputs/
+tests/
+src/
+*.tif
+*.tiff
