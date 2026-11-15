@@ -1,0 +1,187 @@
+{
+  "type": "FeatureCollection",
+  "name": "Jezero_Crater_10_Scientific_Sites",
+  "description": "Ten candidate scientific records in/around Jezero. Paired sample targets share outcrop coordinates; Neretva Vallis is an approximate regional waypoint. Verify in GIS before routing.",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.45165,
+          18.42769
+        ]
+      },
+      "properties": {
+        "site_name": "Roubion",
+        "geologic_unit": "Máaz Formation",
+        "scientific_rationale": "Basaltic igneous rock; crater-floor sample",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022, Samples Collected From the Floor of Jezero Crater",
+        "elevation_m": -2585.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.44437,
+          18.43074
+        ]
+      },
+      "properties": {
+        "site_name": "Montdenier",
+        "geologic_unit": "Máaz Formation / Rochette member",
+        "scientific_rationale": "Igneous basalt; paired core target with Montagnac",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2574.6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.44437,
+          18.43074
+        ]
+      },
+      "properties": {
+        "site_name": "Montagnac",
+        "geologic_unit": "Máaz Formation / Rochette member",
+        "scientific_rationale": "Paired core target at Rochette outcrop",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2574.6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.44301,
+          18.43397
+        ]
+      },
+      "properties": {
+        "site_name": "Salette",
+        "geologic_unit": "Séítah Formation / Bastide member",
+        "scientific_rationale": "Ultramafic cumulate; paired core target with Coulettes",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2569.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.44301,
+          18.43397
+        ]
+      },
+      "properties": {
+        "site_name": "Coulettes",
+        "geologic_unit": "Séítah Formation / Bastide member",
+        "scientific_rationale": "Paired core target at Bastide outcrop",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2569.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.44133,
+          18.43264
+        ]
+      },
+      "properties": {
+        "site_name": "Robine",
+        "geologic_unit": "Séítah Formation / Issole member",
+        "scientific_rationale": "Ultramafic cumulate; paired core target with Malay",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2574.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.44133,
+          18.43264
+        ]
+      },
+      "properties": {
+        "site_name": "Malay",
+        "geologic_unit": "Séítah Formation / Issole member",
+        "scientific_rationale": "Paired core target at Issole outcrop",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2574.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.45242,
+          18.44386
+        ]
+      },
+      "properties": {
+        "site_name": "Hahonih",
+        "geologic_unit": "Máaz Formation / Ch'ał member",
+        "scientific_rationale": "Igneous andesite; paired core target with Atsah",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2568.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.45242,
+          18.44386
+        ]
+      },
+      "properties": {
+        "site_name": "Atsah",
+        "geologic_unit": "Máaz Formation / Ch'ał member",
+        "scientific_rationale": "Paired core target at Sid outcrop",
+        "coordinate_confidence": "High",
+        "source": "Farley et al., 2022",
+        "elevation_m": -2568.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.55,
+          18.45
+        ]
+      },
+      "properties": {
+        "site_name": "Neretva Vallis (regional target)",
+        "geologic_unit": "Inlet channel / Western Fan system",
+        "scientific_rationale": "Major sediment-transport inlet feeding the Western Fan; coordinate is an approximate regional waypoint, not a sample-site coordinate",
+        "coordinate_confidence": "Medium",
+        "source": "Jezero crater floor science campaign overview; regional feature location approximate",
+        "elevation_m": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+:root {
+  --bg: #0b0806;
+  --surface: #160d09;
+  --surface-2: #211410;
+  --border: #3a2318;
+  --accent: #c1440e;
+  --accent-light: #e2652e;
+  --text: #f2e6dc;
+  --muted: #b8a597;
+  --header-h: 56px;
+  --panel-w: 340px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, "Segoe UI", sans-serif;
+}
+
+header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+header a {
+  color: var(--accent-light);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+header a:hover {
+  color: var(--text);
+}
+
+main {
+  display: flex;
+  height: calc(100vh - var(--header-h));
+}
+
+#map {
+  flex: 1;
+  background: #000;
+  min-width: 0;
+}
+
+#panel {
+  width: var(--panel-w);
+  padding: 20px;
+  overflow-y: auto;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Mobile: panel goes under the map */
+@media (max-width: 800px) {
+  main {
+    flex-direction: column;
+  }
+
+  #map {
+    flex: 1 1 60%;
+  }
+
+  #panel {
+    width: 100%;
+    flex: 1 1 40%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}#panel h2 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-light);
+}
+
+#panel dl {
+  margin: 0 0 16px;
+}
+
+#panel dt {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#panel dd {
+  margin: 2px 0 14px;
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+#panel .hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
