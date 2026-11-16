@@ -10,9 +10,9 @@ from decimal import Decimal
 from numbers import Real
 
 try:  # Supports both `import src.route_api` and adding src/ to sys.path.
-    from .route_planner import calculate_routes
+    from .route_planner import SearchWindowLimitError, calculate_routes
 except ImportError:
-    from route_planner import calculate_routes
+    from route_planner import SearchWindowLimitError, calculate_routes
 
 
 CRS_ASSUMPTION = {
@@ -22,7 +22,7 @@ CRS_ASSUMPTION = {
 }
 
 
-def plan_routes(start_lon, start_lat, target_site):
+def plan_routes(start_lon, start_lat, target_site, diagnostics_callback=None):
     """Return one or two route plans as a JSON-serializable dictionary, without writing files.
 
     Args:
@@ -47,11 +47,21 @@ def plan_routes(start_lon, start_lat, target_site):
         return _error("target_site must be a non-empty site name.", start_lon, start_lat, target_site)
 
     try:
-        result = calculate_routes(
-            start_lon=start_lon,
-            start_lat=start_lat,
-            target_site=target_site,
+        calculate_kwargs = {
+            "start_lon": start_lon,
+            "start_lat": start_lat,
+            "target_site": target_site,
+        }
+        if diagnostics_callback is not None:
+            calculate_kwargs["diagnostics_callback"] = diagnostics_callback
+        result = calculate_routes(**calculate_kwargs)
+    except SearchWindowLimitError as error:
+        response = _error(
+            str(error), start_lon, start_lat, target_site,
+            error_type="SearchWindowLimitError",
         )
+        response["search_window"] = error.search_window
+        return response
     except Exception as error:
         return _error(str(error), start_lon, start_lat, target_site, error_type=type(error).__name__)
 

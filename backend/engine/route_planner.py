@@ -31,8 +31,30 @@ GEOJSON_PATH = OUT_DIR / "route_planner_routes.geojson"
 PNG_PATH = OUT_DIR / "route_planner_map.png"
 SOURCE_CRS = CRS.from_proj4("+proj=longlat +a=3396190 +b=3396190 +no_defs +type=crs")
 ROUGHNESS_WINDOW = 5
+# Real-DEM resource calibration under a 512 MiB process cap:
+# 2.50M-window cases peaked at 294.2 MiB; a 9.06M-window case failed an
+# allocation. Keep a conservative 2.0M-cell ceiling until the exact corridor
+# representation is implemented and re-measured in the Render container.
+MAX_ROUTE_WINDOW_CELLS = 2_000_000
 CLASS_NAMES = {1: "More Suitable", 2: "Caution", 3: "Unsuitable"}
 CLASS_COLORS = {0: (235, 235, 235), 1: (50, 180, 90), 2: (245, 200, 60), 3: (210, 65, 65)}
+
+
+class SearchWindowLimitError(RuntimeError):
+    """Raised before allocating terrain arrays for an oversized DEM window."""
+
+    def __init__(self, height, width, cell_count, max_cells):
+        self.search_window = {
+            "height": int(height),
+            "width": int(width),
+            "cell_count": int(cell_count),
+            "max_cells": int(max_cells),
+        }
+        super().__init__(
+            f"Search window {height} x {width} ({cell_count:,} cells) exceeds "
+            f"the current resource limit of {max_cells:,} cells. Choose a "
+            "landing point closer to the target; no route was computed."
+        )
 
 
 def arguments():
@@ -324,6 +346,7 @@ def calculate_routes(
     slope_weight=2.0,
     roughness_weight=2.0,
     caution_penalty=4.0,
+    diagnostics_callback=None,
 ):
     """Calculate the preferred A* route and an optional distinct alternative."""
     row_mode = start_row is not None and start_col is not None
@@ -411,6 +434,21 @@ def calculate_routes(
         row1 = min(dem.height, max(start[0], target[0])+pad_rows+1)
         col0 = max(0, min(start[1], target[1])-pad_cols)
         col1 = min(dem.width, max(start[1], target[1])+pad_cols+1)
+        window_height = row1-row0
+        window_width = col1-col0
+        window_cells = window_height*window_width
+        search_window = {
+            "height": int(window_height),
+            "width": int(window_width),
+            "cell_count": int(window_cells),
+            "max_cells": MAX_ROUTE_WINDOW_CELLS,
+        }
+        if diagnostics_callback is not None:
+            diagnostics_callback(search_window.copy())
+        if window_cells > MAX_ROUTE_WINDOW_CELLS:
+            raise SearchWindowLimitError(
+                window_height, window_width, window_cells, MAX_ROUTE_WINDOW_CELLS
+            )
         elevation = dem.read(1, window=Window(col0, row0, col1-col0, row1-row0), masked=True).astype("float32")
         slope, roughness, combined_valid, classes = terrain_layers(elevation, px, py)
         local_start = (start[0]-row0, start[1]-col0)
@@ -511,6 +549,7 @@ def calculate_routes(
                 "note": "The GeoJSON coordinate interpretation follows validate_science_sites.py and still requires confirmation against the source data.",
             },
             "dem": {"name": DEM_PATH.name, "crs": dem.crs.to_string(), "resolution_m": [float(px), float(py)]},
+            "search_window": search_window,
             "_render_context": {
                 "classes": classes,
                 "offset": (row0, col0),
