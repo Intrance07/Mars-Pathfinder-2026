@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: mars-pathfinder-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: master
+    autoDeployTrigger: commit
+    dockerfilePath: ./render.Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: API_ALLOWED_ORIGINS
+        value: https://mars-pathfinder-frontend.onrender.com
+      - key: MPLCONFIGDIR
+        value: /tmp/matplotlib
+
+  - type: web
+    name: mars-pathfinder-frontend
+    runtime: static
+    branch: master
+    autoDeployTrigger: commit
+    buildCommand: npm --prefix frontend ci && npm --prefix frontend run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://mars-pathfinder-api.onrender.com

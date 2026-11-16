@@ -1,0 +1,18 @@
+**/.git
+**/__pycache__
+**/.pytest_cache
+**/.venv
+**/venv
+**/node_modules
+**/dist
+.env
+.env.*
+!.env.example
+/data
+/outputs
+/tests
+/src
+/frontend
+backend/data/raw/*
+!backend/data/raw/M20_JezeroCrater_CTXDEM_20m (1).tif
+!backend/data/raw/jezero_10_scientific_sites.geojson

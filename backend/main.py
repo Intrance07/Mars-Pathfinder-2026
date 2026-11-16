@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -15,9 +16,21 @@ from landing_point_api import evaluate_landing_point_lonlat  # noqa: E402
 
 app = FastAPI(title="Mars Pathfinder API")
 
+_default_cors_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+_configured_cors_origins = os.getenv("API_ALLOWED_ORIGINS")
+_cors_origins = (
+    [
+        origin.strip().rstrip("/")
+        for origin in _configured_cors_origins.split(",")
+        if origin.strip()
+    ]
+    if _configured_cors_origins is not None
+    else _default_cors_origins
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

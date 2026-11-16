@@ -17,6 +17,7 @@ import numpy as np
 import rasterio
 from PIL import Image, ImageDraw, ImageFont
 from scipy.ndimage import binary_erosion, uniform_filter
+from rasterio.windows import Window
 
 
 PIXEL_SIZE_M = 20.0
@@ -69,7 +70,17 @@ def _find_dem(raw_folder):
     return dem_files[0]
 
 
-def _render_context(classification, row, col, radius_m, pixel_size_x, pixel_size_y):
+def _render_context(
+    classification,
+    row,
+    col,
+    radius_m,
+    pixel_size_x,
+    pixel_size_y,
+    *,
+    offset=(0, 0),
+    full_shape=None,
+):
     """Keep a compact classification preview around the evaluated circle.
 
     This is a sampled class-code grid, not an elevation/DEM array. The default
@@ -78,17 +89,25 @@ def _render_context(classification, row, col, radius_m, pixel_size_x, pixel_size
     """
     row_radius = math.ceil(radius_m / pixel_size_y)
     col_radius = math.ceil(radius_m / pixel_size_x)
+    full_height, full_width = full_shape or classification.shape
     row_start = max(0, row - row_radius)
-    row_end = min(classification.shape[0], row + row_radius + 1)
+    row_end = min(full_height, row + row_radius + 1)
     col_start = max(0, col - col_radius)
-    col_end = min(classification.shape[1], col + col_radius + 1)
+    col_end = min(full_width, col + col_radius + 1)
     preview_height = row_end - row_start
     preview_width = col_end - col_start
     stride = max(
         1,
         math.ceil(max(preview_height, preview_width) / MAX_RENDER_DIMENSION),
     )
-    grid = classification[row_start:row_end:stride, col_start:col_end:stride]
+    local_row_start = row_start - offset[0]
+    local_row_end = row_end - offset[0]
+    local_col_start = col_start - offset[1]
+    local_col_end = col_end - offset[1]
+    grid = classification[
+        local_row_start:local_row_end:stride,
+        local_col_start:local_col_end:stride,
+    ]
     return {
         "classification_grid": grid.tolist(),
         "row_start": int(row_start),
@@ -136,7 +155,25 @@ def evaluate_landing_point(row, col, radius_m=500.0, *, verbose=False, dem_path=
                 f"({pixel_size_x:g}, {pixel_size_y:g}) m."
             )
 
-        elevation = dem.read(1, masked=True).astype("float32")
+        # Only compute terrain layers in the evaluation bounding box plus the
+        # two-cell roughness halo. The halo preserves the existing 5x5 local
+        # statistics and central-difference gradients for every evaluated cell.
+        row_radius = math.ceil(radius_m / pixel_size_y)
+        col_radius = math.ceil(radius_m / pixel_size_x)
+        eval_row_start = max(0, row - row_radius)
+        eval_row_end = min(height, row + row_radius + 1)
+        eval_col_start = max(0, col - col_radius)
+        eval_col_end = min(width, col + col_radius + 1)
+        halo = ROUGHNESS_WINDOW // 2
+        row_start = max(0, eval_row_start - halo)
+        row_end = min(height, eval_row_end + halo)
+        col_start = max(0, eval_col_start - halo)
+        col_end = min(width, eval_col_end + halo)
+        elevation = dem.read(
+            1,
+            window=Window(col_start, row_start, col_end - col_start, row_end - row_start),
+            masked=True,
+        ).astype("float32")
         valid = ~np.ma.getmaskarray(elevation) & np.isfinite(elevation.data)
         if verbose:
             print(
@@ -145,7 +182,9 @@ def evaluate_landing_point(row, col, radius_m=500.0, *, verbose=False, dem_path=
                 flush=True,
             )
 
-        if not valid[row, col]:
+        local_row = row - row_start
+        local_col = col - col_start
+        if not valid[local_row, local_col]:
             raise ValueError(
                 f"The selected point (row={row}, col={col}) has no valid DEM data."
             )
@@ -189,7 +228,7 @@ def evaluate_landing_point(row, col, radius_m=500.0, *, verbose=False, dem_path=
             print("STEP 4: Applying existing suitability thresholds...", flush=True)
 
         # Keep the existing thresholds and NODATA mask behavior unchanged.
-        classification = np.zeros((height, width), dtype=np.uint8)
+        classification = np.zeros(elevation.shape, dtype=np.uint8)
         more_suitable = (slope <= 5) & (roughness <= 2)
         caution = (slope <= 15) & (roughness <= 5)
         classification[combined_valid & more_suitable] = 1
@@ -199,27 +238,28 @@ def evaluate_landing_point(row, col, radius_m=500.0, *, verbose=False, dem_path=
         if verbose:
             print("STEP 4: Suitability classification complete", flush=True)
 
-        if classification[row, col] == 0:
+        if classification[local_row, local_col] == 0:
             raise ValueError(
                 f"The selected point (row={row}, col={col}) does not have "
                 "valid slope and roughness data (it may be near a NoData boundary)."
             )
 
         radius_pixels = radius_m / PIXEL_SIZE_M
-        row_radius = math.ceil(radius_m / pixel_size_y)
-        col_radius = math.ceil(radius_m / pixel_size_x)
-        row_start = max(0, row - row_radius)
-        row_end = min(height, row + row_radius + 1)
-        col_start = max(0, col - col_radius)
-        col_end = min(width, col + col_radius + 1)
-        rows = np.arange(row_start, row_end)[:, None]
-        cols = np.arange(col_start, col_end)[None, :]
+        rows = np.arange(eval_row_start, eval_row_end)[:, None]
+        cols = np.arange(eval_col_start, eval_col_end)[None, :]
         distance_squared = (
             ((rows - row) * pixel_size_y) ** 2
             + ((cols - col) * pixel_size_x) ** 2
         )
         in_circle = distance_squared <= radius_m**2
-        local_classification = classification[row_start:row_end, col_start:col_end]
+        local_eval_row_start = eval_row_start - row_start
+        local_eval_row_end = eval_row_end - row_start
+        local_eval_col_start = eval_col_start - col_start
+        local_eval_col_end = eval_col_end - col_start
+        local_classification = classification[
+            local_eval_row_start:local_eval_row_end,
+            local_eval_col_start:local_eval_col_end,
+        ]
         local_valid = (local_classification > 0) & in_circle
         valid_region_count = int(local_valid.sum())
         if valid_region_count == 0:
@@ -232,8 +272,14 @@ def evaluate_landing_point(row, col, radius_m=500.0, *, verbose=False, dem_path=
         percentages = {
             code: count / valid_region_count * 100 for code, count in counts.items()
         }
-        slope_region = slope[row_start:row_end, col_start:col_end]
-        roughness_region = roughness[row_start:row_end, col_start:col_end]
+        slope_region = slope[
+            local_eval_row_start:local_eval_row_end,
+            local_eval_col_start:local_eval_col_end,
+        ]
+        roughness_region = roughness[
+            local_eval_row_start:local_eval_row_end,
+            local_eval_col_start:local_eval_col_end,
+        ]
         mean_slope = float(slope_region[local_valid].mean())
         mean_roughness = float(roughness_region[local_valid].mean())
 
@@ -241,7 +287,14 @@ def evaluate_landing_point(row, col, radius_m=500.0, *, verbose=False, dem_path=
         final_code = max(counts, key=lambda code: (counts[code], code))
         final_assessment = CLASS_NAMES[final_code]
         render_context = _render_context(
-            classification, row, col, radius_m, pixel_size_x, pixel_size_y
+            classification,
+            row,
+            col,
+            radius_m,
+            pixel_size_x,
+            pixel_size_y,
+            offset=(row_start, col_start),
+            full_shape=(height, width),
         )
 
     result = {

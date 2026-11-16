@@ -6,6 +6,9 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
+const apiUrl = (path) => `${API_BASE_URL}${path}`
+
 delete L.Icon.Default.prototype._getIconUrl
 
 L.Icon.Default.mergeOptions({
@@ -102,7 +105,7 @@ async function assessLandingPoint(point) {
   renderPanel()
 
   try {
-    const response = await fetch('/api/landing-point', {
+    const response = await fetch(apiUrl('/api/landing-point'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -332,7 +335,7 @@ async function planRoutes() {
   renderPanel()
 
   try {
-    const res = await fetch('/api/plan-routes', {
+    const res = await fetch(apiUrl('/api/plan-routes'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -376,7 +379,7 @@ async function planRoutes() {
 
     errorMsg =
       err instanceof TypeError
-        ? 'Could not reach the API. Is the backend running on port 8000?'
+        ? 'Could not reach the API. Please try again when the service is available.'
         : err.message
   }
 
@@ -414,7 +417,7 @@ async function init() {
   L.imageOverlay('/jezero_basemap.png', bounds).addTo(map)
   map.fitBounds(bounds)
 
-  const sitesRes = await fetch('/api/sites')
+  const sitesRes = await fetch(apiUrl('/api/sites'))
   if (!sitesRes.ok) throw new Error(`/api/sites returned ${sitesRes.status}`)
 
   const { sites } = await sitesRes.json()
